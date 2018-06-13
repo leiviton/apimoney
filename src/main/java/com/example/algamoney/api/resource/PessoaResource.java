@@ -22,15 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.algamoney.api.event.RecursoCriadoEvent;
 import com.example.algamoney.api.model.Pessoa;
-import com.example.algamoney.api.repository.PessoaRepository;
 import com.example.algamoney.api.service.PessoaService;
 
 @RestController
 @RequestMapping("/pessoas")
 public class PessoaResource {
-
-	@Autowired
-	private PessoaRepository pessoaRepository;
 	
 	@Autowired
 	private ApplicationEventPublisher publisher;
@@ -41,13 +37,13 @@ public class PessoaResource {
 	@GetMapping
 	public List<Pessoa> listar()
 	{
-		return pessoaRepository.findAll();
+		return pessoaService.list();
 	}
 	
 	@PostMapping
 	public ResponseEntity<Pessoa> save(@Valid @RequestBody Pessoa pessoa, HttpServletResponse response)
 	{
-		Pessoa pessoaSalva = pessoaRepository.save(pessoa);
+		Pessoa pessoaSalva = pessoaService.create(pessoa);
 
 		publisher.publishEvent(new RecursoCriadoEvent(this, response, pessoaSalva.getCodigo()));
 		return ResponseEntity.status(HttpStatus.CREATED).body(pessoaSalva);
@@ -56,7 +52,7 @@ public class PessoaResource {
 	@GetMapping("/{codigo}")
 	public ResponseEntity<Pessoa> edit(@PathVariable Long codigo)
 	{
-		Pessoa pessoa = pessoaRepository.findOne(codigo);
+		Pessoa pessoa = pessoaService.edit(codigo);
 		
 		return pessoa != null ? ResponseEntity.ok(pessoa) : ResponseEntity.notFound().build();
 	}
@@ -65,7 +61,7 @@ public class PessoaResource {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	public void delete(@PathVariable Long codigo)
 	{
-		pessoaRepository.delete(codigo);
+		pessoaService.delete(codigo);
 	}
 	
 	@PutMapping("/{codigo}")
